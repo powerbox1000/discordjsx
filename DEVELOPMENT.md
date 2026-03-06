@@ -13,5 +13,3 @@ Components:
 - [class MessageUpdater](./src/updater/MessageUpdater.ts)
   - Updates a target (`MessageUpdateable`) that might change
   - Takes in `BaseMessageOptions` payload
-- [src/intrinsics](./src/intrinsics)
-  - provides typescript types for IDE autocompletion
