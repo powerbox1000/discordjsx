@@ -7,6 +7,7 @@ import { MessageUpdateData, MessageUpdater } from "../internals.js";
 
 export interface InstanceHooks extends Omit<PayloadBuilderHooks, "addAttachment"> {
     createErrorPayload?: CreateErrorPayload | null;
+    onExpire?: () => void;
 };
 
 export class Instance {
@@ -77,6 +78,6 @@ export class Instance {
     }
 
     private onTargetExpired = () => {
-        // TODO: disabling components maybe?
+        this.hooks.onExpire?.();
     }
 }

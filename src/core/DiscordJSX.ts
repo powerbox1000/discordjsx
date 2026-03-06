@@ -21,7 +21,7 @@ export class DiscordJSX {
     private instances: Collection<Snowflake, Instance> = new Collection();
     private listeners: Collection<string, Function> = new Collection();
     private instanceCustomIds: Collection<Snowflake, Set<string>> = new Collection();
-
+    private modalInstanceIds: Set<Snowflake> = new Set();
 
     public createErrorPayload: CreateErrorPayload | null = createErrorPayload;
     public createCustomId: CreateCustomId = defaultCreateCustomId;
@@ -50,6 +50,25 @@ export class DiscordJSX {
         this.customWrapperComponent = component;
     }
 
+    private cleanupInstance(instanceId: Snowflake) {
+        const customIds = this.instanceCustomIds.get(instanceId);
+        if (!customIds) {
+            throw new ReferenceError(`No instance with id '${instanceId}'`);
+        }
+
+        for (const customId of customIds) {
+            this.listeners.delete(customId);
+        }
+
+        this.instances.delete(instanceId);
+        this.instanceCustomIds.delete(instanceId);
+        this.modalInstanceIds.delete(instanceId);
+    }
+
+    public cleanup(instanceId: Snowflake) {
+        this.cleanupInstance(instanceId);
+    }
+
     public createMessage(
         target: MessageUpdateable,
         element: React.ReactNode,
@@ -65,6 +84,9 @@ export class DiscordJSX {
                 const customId = this.createCustomId(instanceId, providedId);
                 this.instanceCustomIds.get(instanceId)?.add(customId);
                 return customId;
+            },
+            onExpire: () => {
+                this.cleanupInstance(instanceId);
             },
         };
 
@@ -91,12 +113,18 @@ export class DiscordJSX {
         element: React.ReactNode,
         instanceId = SnowflakeUtil.generate().toString(),
     ) {
+        this.instanceCustomIds.set(instanceId, new Set());
+        this.modalInstanceIds.add(instanceId);
+
         const hooks: PayloadBuilderHooks = {
             ...this.eventHooks,
             addAttachment() { },
             getBlobFilename: this.getBlobFilename,
-            createCustomId: (providedId) =>
-                this.createCustomId(instanceId, providedId),
+            createCustomId: (providedId) => {
+                const customId = this.createCustomId(instanceId, providedId);
+                this.instanceCustomIds.get(instanceId)?.add(customId);
+                return customId;
+            },
         };
 
         const node = await renderOnce(element);
@@ -113,6 +141,10 @@ export class DiscordJSX {
             if (instanceId) this.instances.get(instanceId)?.updater.setTarget(int);
 
             this.listeners.get(int.customId)?.(int);
+
+            if (instanceId && this.modalInstanceIds.has(instanceId)) {
+                this.cleanupInstance(instanceId);
+            }
         }
     }
 
