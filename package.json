@@ -1,6 +1,6 @@
 {
-	"name": "discord-jsx-renderer",
-	"version": "0.0.17",
+	"name": "discordjsx",
+	"version": "0.1.0",
 	"description": "React for discord.js",
 	"author": "Powerbox1000",
 	"contributors": [
@@ -25,8 +25,6 @@
 		"@types/react-reconciler": "^0.32.3",
 		"@types/uuid": "^10.0.0",
 		"dotenv": "^16.6.1",
-		"typedoc": "^0.28.15",
-		"typedoc-plugin-markdown": "^4.9.0",
 		"typescript": "5.8.3"
 	},
 	"peerDependencies": {
